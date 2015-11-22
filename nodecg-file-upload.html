@@ -133,7 +133,9 @@ Example:
                 <paper-button id="clear" on-click="clear">Clear</paper-button>
             </template>
         </div>
-        <input type="file" id="fileInput" on-change="_fileChange" hidden multiple="{{multi}}">
+        <form id="fileForm">
+            <input type="file" id="fileInput" on-change="_fileChange" hidden multiple="{{multi}}">
+        </form>
     </template>
 
 </dom-module>
@@ -164,7 +166,7 @@ Example:
              */
             target: {
                 type: String,
-                value: ""
+                value: ''
             },
 
             /**
@@ -188,7 +190,7 @@ Example:
              */
             dropText: {
                 type: String,
-                value: "Drop Files Here"
+                value: 'Drop Files Here'
             },
 
             /**
@@ -213,7 +215,7 @@ Example:
              */
             method: {
                 type: String,
-                value: "PUT"
+                value: 'PUT'
             },
 
             /**
@@ -245,16 +247,17 @@ Example:
          * Clears the list of files
          */
         clear: function () {
-            this.set("files", []);
+            this.set('files', []);
             this._showDropText();
+            this.$.fileForm.reset();
         },
 
         ready: function () {
             if (this.raised) {
-                this.toggleAttribute("raised", true, this.$.button);
+                this.toggleAttribute('raised', true, this.$.button);
             }
             if (this.noink) {
-                this.toggleAttribute("noink", true, this.$.button);
+                this.toggleAttribute('noink', true, this.$.button);
             }
             if (this.droppable) {
                 this._showDropText();
@@ -267,21 +270,21 @@ Example:
          */
         setupDrop: function () {
             var uploadBorder = this.$.UploadBorder;
-            this.toggleClass("enabled", true, uploadBorder);
+            this.toggleClass('enabled', true, uploadBorder);
 
             this.ondragover = function (e) {
                 e.stopPropagation();
-                this.toggleClass("hover", true, uploadBorder);
+                this.toggleClass('hover', true, uploadBorder);
                 return false;
             };
 
             this.ondragleave = function () {
-                this.toggleClass("hover", false, uploadBorder);
+                this.toggleClass('hover', false, uploadBorder);
                 return false;
             };
 
             this.ondrop = function (event) {
-                this.toggleClass("hover", false, uploadBorder);
+                this.toggleClass('hover', false, uploadBorder);
                 event.preventDefault();
                 var length = event.dataTransfer.files.length;
                 for (var i = 0; i < length; i++) {
@@ -289,7 +292,7 @@ Example:
                     file.progress = 0;
                     file.error = false;
                     file.complete = false;
-                    this.push("files", file);
+                    this.push('files', file);
                     this.uploadFile(file);
                 }
             }
@@ -301,8 +304,8 @@ Example:
         _fileClick: function () {
             var elem = this.$.fileInput;
             if (elem && document.createEvent) { // sanity check
-                var evt = document.createEvent("MouseEvents");
-                evt.initEvent("click", true, false);
+                var evt = document.createEvent('MouseEvents');
+                evt.initEvent('click', true, false);
                 elem.dispatchEvent(evt);
             }
         },
@@ -317,7 +320,7 @@ Example:
                 file.progress = 0;
                 file.error = false;
                 file.complete = false;
-                this.push("files", file);
+                this.push('files', file);
                 this.uploadFile(file);
             }
         },
@@ -325,12 +328,12 @@ Example:
         /**
          * Cancels the file upload for a specific file
          *
-         * @param {object} a file, an element of the files array
+         * @param {object} file - an element of the files array
          */
         cancel: function (file) {
             if (file && file.xhr) {
                 file.xhr.abort();
-                this.splice("files", this.files.indexOf(file), 1);
+                this.splice('files', this.files.indexOf(file), 1);
                 this._showDropText();
             }
         },
@@ -338,7 +341,7 @@ Example:
         /**
          * Cancels the file upload
          *
-         * @param {object}, an event object
+         * @param {object} e - an event object
          */
         _cancelUpload: function (e) {
             this.cancel(e.model.__data__.item);
@@ -347,11 +350,11 @@ Example:
         /**
          * Retries to upload the file
          *
-         * @param {object}, an event object
+         * @param {object} e - an event object
          */
         _retryUpload: function (e) {
-            e.model.set("item.error", false);
-            e.model.set("item.progress", 0);
+            e.model.set('item.error', false);
+            e.model.set('item.progress', 0);
             // The async helps give visual feedback of a retry occurring, even though it's less efficient.
             var self = this;
             this.async(function () {
@@ -363,13 +366,13 @@ Example:
          * Whether or not to display the drop text
          */
         _showDropText: function () {
-            this.set("_hiddenDropText", !(!this.files.length && this.droppable));
+            this.set('_hiddenDropText', !(!this.files.length && this.droppable));
         },
 
         /**
          * Uploads a file
          *
-         * @param {object} a file, an element of the files array
+         * @param {object} file - an element of the files array
          */
         uploadFile: function (file) {
             if (!file) {
@@ -377,29 +380,29 @@ Example:
             }
             this._showDropText();
             var self = this;
-            var prefix = "files." + self.files.indexOf(file);
+            var prefix = 'files.' + self.files.indexOf(file);
 
             var formData = new FormData();
-            formData.append("file", file, file.name);
+            formData.append('file', file, file.name);
 
             var xhr = file.xhr = new XMLHttpRequest();
 
             xhr.onprogress = function (e) {
                 var done = e.loaded, total = e.total;
-                self.set(prefix + ".progress", Math.floor((done / total) * 1000) / 10);
+                self.set(prefix + '.progress', Math.floor((done / total) * 1000) / 10);
             };
 
-            var url = this.target.replace("<name>", file.name);
+            var url = this.target.replace('<name>', file.name);
             xhr.open(this.method, url, true);
             xhr.onload = function (e) {
                 if (xhr.status === 200) {
                     self.fire('success', {xhr: xhr});
-                    self.set(prefix + ".complete", true);
+                    self.set(prefix + '.complete', true);
                 }
                 else {
-                    self.set(prefix + ".error", true);
-                    self.set(prefix + ".complete", false);
-                    self.set(prefix + ".progress", 100);
+                    self.set(prefix + '.error', true);
+                    self.set(prefix + '.complete', false);
+                    self.set(prefix + '.progress', 100);
                     self.updateStyles();
                     self.fire('error', {xhr: xhr});
                 }
