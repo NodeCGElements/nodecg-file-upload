@@ -2,4 +2,5 @@
 
 A NodeCG fork of [winhowes/file-upload](https://github.com/winhowes/file-upload).
 
-This element is not ready for production. Do not attempt to use it.
+## DEPRECATED
+This element was a proof-of-concept that has been deprecated. It will not be completed. Do not use it.
